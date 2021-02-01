@@ -43,7 +43,7 @@ def mars_news(browser):
     # Add try/except for error handling
     try:
         slide_elem = news_soup.select_one('ul.item_list li.slide')
-        slide_elem.find("div", class_='content_title')
+        #slide_elem.find("div", class_='content_title')
         # Use the parent element to find the first 'a' tag and save it as 'news_title'
         news_title = slide_elem.find("div", class_='content_title').get_text()
         # Use the parent element to find the paragraph text
@@ -55,7 +55,7 @@ def mars_news(browser):
 
 
 # ### Featured Images
-def featured_images(browser):
+def featured_image(browser):
     # Visit URL
     url = 'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/index.html'
     browser.visit(url)
@@ -76,8 +76,15 @@ def featured_images(browser):
         return None
 
     # Use the base URL to create an absolute URL
-        img_url = f'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/{img_url_rel}'
+    img_url = f'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/{img_url_rel}'
 
+    # 10.5.1 fix from John
+    #try:
+       #PREFIX = "https://web.archive.org/web/20181114023740"
+       #url = f'{PREFIX}/https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars'
+    #except AttributeError:
+        #return None
+    
     return img_url
 
 # Scrape facts from the Mars facts website
@@ -87,11 +94,13 @@ def mars_facts():
         df = pd.read_html('http://space-facts.com/mars/')[0] #tells pandas to scrape only the first table (index 0)
     except BaseException:
         return None
+    
+    # Assign columns and set index of dataframe
     df.columns=['description', 'value'] #assings columns to the new dataframe
     df.set_index('description', inplace=True) #sets the description column as the dataframe's index. Inplace=True means the updated index will remain in place
     
     # Convert dataframe into HTML format, add bootstrap
-    return df.to_html()
+    return df.to_html(classes="table table-striped")
 
 if __name__ == "__main__":
 
