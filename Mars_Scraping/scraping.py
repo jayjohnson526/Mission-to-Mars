@@ -5,6 +5,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
 import datetime as dt
 
+
 def scrape_all():
     # Initiate headless driver for deployment
     browser = Browser("chrome", executable_path='chromedriver', headless=True)
@@ -16,7 +17,8 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
-        "last_modified": dt.datetime.now()
+        "last_modified": dt.datetime.now(),
+        "hemispheres": hemisphere_image_urls(browser)
     }
 
     # Stop webdriver and return data
@@ -43,7 +45,6 @@ def mars_news(browser):
     # Add try/except for error handling
     try:
         slide_elem = news_soup.select_one('ul.item_list li.slide')
-        #slide_elem.find("div", class_='content_title')
         # Use the parent element to find the first 'a' tag and save it as 'news_title'
         news_title = slide_elem.find("div", class_='content_title').get_text()
         # Use the parent element to find the paragraph text
@@ -56,36 +57,16 @@ def mars_news(browser):
 
 # ### Featured Images
 def featured_image(browser):
-    # Visit URL
-    url = 'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/index.html'
-    browser.visit(url)
-
-    # Find and click the full image button
-    full_image_elem = browser.find_by_tag('button')[1]
-    full_image_elem.click()
-
-    # Parse the resulting html with soup
-    html = browser.html
-    img_soup = soup(html, 'html.parser')
-
-    
     try:
-        # Find the relative image url
-        img_url_rel = img_soup.find('img', class_='fancybox-image').get('src')
-    except AttributeError:
-        return None
-
-    # Use the base URL to create an absolute URL
-    img_url = f'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/{img_url_rel}'
-
-    # 10.5.1 fix from John
-    #try:
-       #PREFIX = "https://web.archive.org/web/20181114023740"
-       #url = f'{PREFIX}/https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars'
-    #except AttributeError:
-        #return None
-    
-    return img_url
+        PREFIX = "https://web.archive.org/web/20181114023740"
+        url = f'{PREFIX}/https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars'
+        browser.visit(url)
+        article = browser.find_by_tag('article').first['style']
+        article_background = article.split("_/")[1].replace('");',"")
+        return f'{PREFIX}_if/{article_background}'
+    except:
+        return 'https://www.nasa.gov/sites/default/files/styles/full_width_feature/public/thumbnails/image/pia22486-main.jpg'
+ 
 
 # Scrape facts from the Mars facts website
 def mars_facts():
@@ -96,11 +77,36 @@ def mars_facts():
         return None
     
     # Assign columns and set index of dataframe
-    df.columns=['description', 'value'] #assings columns to the new dataframe
-    df.set_index('description', inplace=True) #sets the description column as the dataframe's index. Inplace=True means the updated index will remain in place
+    df.columns=['Description', 'Mars'] #assings columns to the new dataframe
+    df.set_index('Description', inplace=True) #sets the description column as the dataframe's index. Inplace=True means the updated index will remain in place
     
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+
+def hemisphere_image_urls(browser):
+
+    try:
+        url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+        browser.visit(url)
+
+        html = browser.html
+        img_soup = soup(html, 'html.parser')
+
+        hemisphere_image_urls = []
+        img_elem = browser.find_by_tag("h3")
+
+        for x in range(len(img_elem)):
+            hemispheres = {}
+            browser.find_by_tag("h3")[x].click()
+            img_link = browser.links.find_by_text('Sample')[0]
+            hemispheres['img_url'] = img_link['href']
+            hemispheres['title'] = browser.find_by_css("h2.title").text
+            hemisphere_image_urls.append(hemispheres)
+            browser.back()
+        return hemisphere_image_urls
+
+    except BaseException:
+        return None
 
 if __name__ == "__main__":
 
