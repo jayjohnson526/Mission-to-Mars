@@ -8,6 +8,7 @@ import datetime as dt
 
 def scrape_all():
     # Initiate headless driver for deployment
+    #executable_path = {'executable_path': ChromeDriverManager().install()}
     browser = Browser("chrome", executable_path='chromedriver', headless=True)
     news_title, news_paragraph = mars_news(browser)
 
@@ -84,14 +85,12 @@ def mars_facts():
     return df.to_html(classes="table table-striped")
 
 def hemisphere_image_urls(browser):
-
     try:
         url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
         browser.visit(url)
 
         html = browser.html
         img_soup = soup(html, 'html.parser')
-
         hemisphere_image_urls = []
         img_elem = browser.find_by_tag("h3")
 
@@ -103,12 +102,16 @@ def hemisphere_image_urls(browser):
             hemispheres['title'] = browser.find_by_css("h2.title").text
             hemisphere_image_urls.append(hemispheres)
             browser.back()
-        return hemisphere_image_urls
+        #return hemisphere_image_urls
 
     except BaseException:
         return None
+
+    return hemisphere_image_urls
+
 
 if __name__ == "__main__":
 
     # If running as script, print scraped data
     print(scrape_all())
+    #hemisphere_image_urls()
