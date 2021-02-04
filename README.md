@@ -14,7 +14,7 @@ The goal of this project is to write a script that can gather information about 
 ### Scraped Web Results
 
 ### Mars Facts
-![](mars_image_and_facts.png)
+![](images/mars_image_and_facts.png)
 
 ### Mars Hemisphere Images
-![](mars_hemispheres.png)
+![](images/mars_hemispheres.png)
